@@ -1,0 +1,130 @@
+#include <math.h>
+#include <stdio.h>
+
+// Kernel function to add the elements of two arrays
+__global__
+void czek(int n, int *idx, int *str, int *bI, int *bD, int *tI, int *gD)
+{
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int stride = blockDim.x * gridDim.x;
+  for (int i = index; i < n; i += stride){
+      idx[i] = index;
+      str[i] = stride;
+      bI[i] = blockIdx.x;
+      bD[i] = blockDim.x;
+      tI[i] = threadIdx.x;
+      gD[i] = gridDim.x;
+  }
+}
+
+__global__
+void add(int n, float *x, int *y)
+{
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int stride = blockDim.x * gridDim.x;
+  for (int i = index; i < n; i += stride)
+      atomicAdd(y[blockIdx.x], int(x[i]));
+}
+
+__global__
+void findvec(int n, float *x, int *out)
+{
+  int matches = 0;
+  int index = blockIdx.x * blockDim.x + threadIdx.x;
+  int stride = blockDim.x * gridDim.x;
+  for (int i = 0; i < blockDim.x; i ++)
+      if (x[i] < 0) matches++;
+	 
+  out[blockIdx.x] = matches;
+}
+
+int load_data(float *x)
+{
+    FILE *f = fopen("data.dat", "r");
+    float buf;
+    int i = 0;
+    while(fscanf(f, "%f", &buf) > 0)
+	x[i++] = buf;
+    fclose(f);
+    return i - 1;
+}
+
+int countlines(char *fname)
+{
+    FILE *f = fopen(fname, "r");
+    if (f == NULL)
+	return -1;
+
+    char z;
+    int linenumbers = 0;
+    while((z = fgetc(f)) != EOF)
+	if (z == '\n')
+	    linenumbers++;
+    fclose(f);
+    return linenumbers;
+}
+
+
+
+int main(void)
+{
+  int i;
+  float *x;
+  int *idx,  *str,  *bI,  *bD,  *tI,  *gD; 
+  int *match;
+
+  // data
+  char fname[] = "./data.dat";
+  int N = countlines(fname);
+  if (N < 0)
+      return N;
+
+  // parrallelism
+  int blockSize = 4 ;//256;
+  int numBlocks = (N + blockSize - 1) / blockSize;
+
+  // Allocate Unified Memory – accessible from CPU or GPU
+  cudaMallocManaged(&x, N*sizeof(float));
+  cudaMallocManaged(&match, numBlocks*sizeof(int));
+  cudaMallocManaged(&idx, N*sizeof(int));
+  cudaMallocManaged(&str, N*sizeof(int));
+  cudaMallocManaged(&bI, N*sizeof(int));
+  cudaMallocManaged(&bD, N*sizeof(int));
+  cudaMallocManaged(&tI, N*sizeof(int));
+  cudaMallocManaged(&gD, N*sizeof(int));
+
+  // load data
+  load_data(x);
+  for (i = 0; i < numBlocks; i++)
+      match[i] = 0;
+
+  // Run kernel on 1M elements on the GPU
+//  findvec<<<numBlocks, blockSize>>>(N, x, match);
+  add<<<numBlocks, blockSize>>>(N, x, match);
+  czek<<<numBlocks, blockSize>>>(N, idx, str, bI, bD, tI, gD);
+
+  // Wait for GPU to finish before accessing on host
+  cudaDeviceSynchronize();
+
+  // Check for errors (all values should be 3.0f)
+  for (i = 0; i < N; i++)
+      fprintf(stdout, "x %f idx %d, str %d bI %d bD %i iT %d gD %d\n", 
+	      x[i], 
+	      idx[i], str[i],
+	      bI[i], bD[i], tI[i], gD[i]);
+
+  for (i = 0; i < numBlocks; i++)
+      fprintf(stdout, "match in gpuBlockIdx.%d: %d\n", i, match[i]);
+
+  // Free memory
+  cudaFree(x);
+  cudaFree(match);
+  cudaFree(idx);
+  cudaFree(str);
+  cudaFree(bI);
+  cudaFree(bD);
+  cudaFree(tI);
+  cudaFree(gD);
+  
+  return 0;
+}

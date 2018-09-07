@@ -1,0 +1,89 @@
+#include <math.h>
+#include <stdio.h>
+#include "csutil.h"
+
+int load_data(char *fname, float *x)
+{
+    FILE *f = fopen("data.dat", "r");
+    float buf;
+    int i = 0;
+    while(fscanf(f, "%f", &buf) > 0)
+	x[i++] = buf;
+    fclose(f);
+    return i - 1;
+}
+
+int countlines(char *fname)
+{
+    FILE *f = fopen(fname, "r");
+    if (f == NULL)
+	return -1;
+
+    char z;
+    int linenumbers = 0;
+    while((z = fgetc(f)) != EOF)
+	if (z == '\n')
+	    linenumbers++;
+    fclose(f);
+    return linenumbers;
+}
+
+int main(void)
+{
+  int i;
+  float *x;
+  int *idx;
+  int *matches;
+  float *base_vec, r;
+  int m;
+
+  // data
+  char fname[] = "./data.dat";
+  int N = countlines(fname);
+  if (N <= 0) return N;
+
+  // parrallelism
+  int blockSize = BLOCKSIZE; //4 ;//256;
+  int numBlocks = (N + blockSize - 1) / blockSize;
+
+  // Allocate Unified Memory – accessible from CPU or GPU
+  gpuErrchk(cudaMallocManaged(&x, N*sizeof(float)));
+  gpuErrchk(cudaMallocManaged(&matches, sizeof(int)));
+  gpuErrchk(cudaMallocManaged(&idx, N*sizeof(int)));
+
+  // initialize data
+  load_data(fname, x);
+  for (i = 0; i < N; i++) idx[i] = 0;
+  matches[0] = 0;
+ 
+  // Sampen algorithm initialisation
+  m = 2;
+  gpuErrchk(cudaMemcpyToSymbol(d_m, &m, sizeof(int), 0, cudaMemcpyHostToDevice));
+  r = 0.2f;
+  gpuErrchk(cudaMemcpyToSymbol(d_r, &r, sizeof(float), 0, cudaMemcpyHostToDevice));
+
+  // build base vec
+  gpuErrchk(cudaMallocManaged(&base_vec, m*sizeof(float)));
+  //for (i = 0; i < m; i++) base_vec[i] = i == 0 ? 1: -1;
+  for (i = 0; i < m; i++) base_vec[i] = x[i];
+
+  // Run kernel on the GPU
+  // find matches
+  findvec<<<numBlocks, blockSize>>>(base_vec, x, idx);
+  gpuErrchk(cudaDeviceSynchronize());
+
+  //reduce
+  reduce<<<numBlocks, blockSize>>>(idx, matches);
+  gpuErrchk(cudaDeviceSynchronize());
+
+  fprintf(stdout, "vector matches: %d\n", matches[0]);
+
+  // Free memory
+  gpuErrchk(cudaFree(x));
+  gpuErrchk(cudaFree(matches));
+  gpuErrchk(cudaFree(idx));
+  
+  return 0;
+}
+
+
