@@ -118,11 +118,11 @@ void usage(char **argv)
     printf("   -r, --radius=FLOAT     set the maximal distance between vectors\n");
     printf("                          to 'radius' to FLOAT\n");
     printf("   -i, --in=FILE_NAME     set the input data to FILE_NAME\n");
-    printf("   -o, --out=FILE_NAME    set the output data to FILE_NAME\n")
+    printf("   -o, --out=FILE_NAME    set the output data to FILE_NAME\n");
     printf("\n");
 }
 
-def std(float x)
+float std(float x)
 {
   int i;
   float sd = 0, mean = 0;
