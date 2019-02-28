@@ -156,7 +156,7 @@ void parse_arguments(int argc, char **argv, params *p)
       case 'r':
         sscanf(optarg, "%f", &(p->r));
         ftmp = atof(optarg);
-        gpuErrchk(cudaMemcpyToSymbol(d_r, &(p->r), sizeof(float), 0, cudaMemcpyHostToDevice));
+        //gpuErrchk(cudaMemcpyToSymbol(d_r, &(p->r), sizeof(float), 0, cudaMemcpyHostToDevice));
         break;
       case 'i':
         strcpy(p->infile, optarg);
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
   // Sampen algorithm initialisation
   m = 2;
   gpuErrchk(cudaMemcpyToSymbol(d_m, &m, sizeof(int), 0, cudaMemcpyHostToDevice));
-  r = 0.2f * sd;
+  r = p.r * sd;
   gpuErrchk(cudaMemcpyToSymbol(d_r, &r, sizeof(float), 0, cudaMemcpyHostToDevice));
 
   // space in shared mem for base vec (m + 1)
