@@ -122,7 +122,7 @@ void usage(char **argv)
     printf("\n");
 }
 
-float sandard_deviation(float x, int N)
+float sandard_deviation(float *x, int N)
 {
   int i;
   float sd = 0, mean = 0;
