@@ -198,6 +198,7 @@ int main(int argc, char **argv)
   int *mvec, *mplus1vec;
   int *mmatches, *mplus1matches;
   float *base_vec, r, sd;
+  int m;
 
   // data
   int N = countlines(p.infile);
@@ -219,6 +220,7 @@ int main(int argc, char **argv)
   sd = sandard_deviation(x, N);
 
   // Sampen algorithm initialisation
+  m = p.m;
   r = p.r * sd;
   gpuErrchk(cudaMemcpyToSymbol(d_r, &r, sizeof(float), 0, cudaMemcpyHostToDevice));
 
