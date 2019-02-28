@@ -106,8 +106,8 @@ int countlines(char *fname)
 typedef struct {
   float r;          // max distance
   int m;            // embed dim
-  char infile;      //
-  char outfile;     //
+  char infile[];      //
+  char outfile[];     //
 } params;
 
 static struct option options[] = {
@@ -211,10 +211,10 @@ int main(int argc, char **argv)
   sd = sandard_deviation(x, N);
 
   // Sampen algorithm initialisation
-  //m = 2;
-  //gpuErrchk(cudaMemcpyToSymbol(d_m, &m, sizeof(int), 0, cudaMemcpyHostToDevice));
-  //r = 0.2f * sd;
-  //gpuErrchk(cudaMemcpyToSymbol(d_r, &r, sizeof(float), 0, cudaMemcpyHostToDevice));
+  m = 2;
+  gpuErrchk(cudaMemcpyToSymbol(d_m, &m, sizeof(int), 0, cudaMemcpyHostToDevice));
+  r = 0.2f * sd;
+  gpuErrchk(cudaMemcpyToSymbol(d_r, &r, sizeof(float), 0, cudaMemcpyHostToDevice));
 
   // space in shared mem for base vec (m + 1)
   gpuErrchk(cudaMallocManaged(&base_vec, (m + 1) * sizeof(float)));
