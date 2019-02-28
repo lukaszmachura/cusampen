@@ -196,6 +196,7 @@ int main(int argc, char **argv)
   parse_arguments(argc, argv, &p);
   
   dump_params(&p);
+  return 1;
   
   int i;
   float *x;
