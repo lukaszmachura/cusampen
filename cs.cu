@@ -153,8 +153,6 @@ void parse_arguments(int argc, char **argv, params *p)
         break;
       case 'r':
         sscanf(optarg, "%f", &(p->r));
-        ftmp = atof(optarg);
-        //gpuErrchk(cudaMemcpyToSymbol(d_r, &(p->r), sizeof(float), 0, cudaMemcpyHostToDevice));
         break;
       case 'i':
         strcpy(p->infile, optarg);
@@ -200,7 +198,6 @@ int main(int argc, char **argv)
   int *mvec, *mplus1vec;
   int *mmatches, *mplus1matches;
   float *base_vec, r, sd;
-  int m;
 
   // data
   int N = countlines(p.infile);
@@ -222,8 +219,6 @@ int main(int argc, char **argv)
   sd = sandard_deviation(x, N);
 
   // Sampen algorithm initialisation
-  m = p.m;
-  gpuErrchk(cudaMemcpyToSymbol(d_m, &m, sizeof(int), 0, cudaMemcpyHostToDevice));
   r = p.r * sd;
   gpuErrchk(cudaMemcpyToSymbol(d_r, &r, sizeof(float), 0, cudaMemcpyHostToDevice));
 
