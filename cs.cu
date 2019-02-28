@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <getopt.h>
 
+#define FILE_SIZE 40
+
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
@@ -104,10 +106,10 @@ int countlines(char *fname)
 
 // parameters
 typedef struct {
-  float r;          // max distance
-  int m;            // embed dim
-  char infile[];      //
-  char outfile[];     //
+  float r;                 // max distance
+  int m;                   // embed dim
+  char infile[FILE_SIZE],  //
+  char outfile[FILE_SIZE]  //
 } params;
 
 static struct option options[] = {
@@ -147,10 +149,10 @@ void parse_arguments(int argc, char **argv, params *p)
         gpuErrchk(cudaMemcpyToSymbol(d_r, &(p->r), sizeof(float), 0, cudaMemcpyHostToDevice));
         break;
       case 'i':
-        optarg;
+        strcpy(p->infile, optarg);
         break;
       case 'd':
-        optarg;
+        strcpy(p->outfile, optarg);
         break;
     }
   }
