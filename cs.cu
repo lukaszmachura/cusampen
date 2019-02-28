@@ -106,18 +106,28 @@ int countlines(char *fname)
 
 // parameters
 typedef struct {
-  float r;                 // max distance
-  int m;                   // embed dim
-  char infile[FILE_SIZE],  //
-  char outfile[FILE_SIZE]  //
+  float r;                  // max distance
+  int m;                    // embed dim
+  char infile[FILE_SIZE];   //
+  char outfile[FILE_SIZE];  //
 } params;
 
 static struct option options[] = {
     {"in", required_argument, NULL, 'i'},
     {"out", required_argument, NULL, 'o'},
     {"embed", required_argument, NULL, 'm'},
-    {"rad", required_argument, NULL, 'r'},
+    {"radius", required_argument, NULL, 'r'},
 };
+
+void dump_params(params * p)
+{
+  fprintf(stdout,"#\n");
+  fprintf(stdout,"#m:%d\n",p->m);
+  fprintf(stdout,"#r:%f\n",p->r);
+  fprintf(stdout,"#infile:%s\n",p->infile);
+  fprintf(stdout,"#outfile:%s\n",p->outfile);
+  fflush(stdut);
+}
 
 void usage(char **argv)
 {
@@ -184,6 +194,8 @@ int main(int argc, char **argv)
     "out.dat"
   };
   parse_arguments(argc, argv, &p);
+  
+  dump_params(&p);
   
   int i;
   float *x;
