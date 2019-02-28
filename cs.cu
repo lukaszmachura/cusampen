@@ -143,8 +143,6 @@ void usage(char **argv)
 
 void parse_arguments(int argc, char **argv, params *p)
 {
-  float ftmp;
-  int itmp;
   int c;
 
   while( (c = getopt_long(argc, argv, "m:r:i:o", options, NULL)) != EOF) {
@@ -205,8 +203,7 @@ int main(int argc, char **argv)
   int m;
 
   // data
-  char fname[] = "./data.dat";
-  int N = countlines(fname);
+  int N = countlines(p.infile);
   if (N <= 0) return N;
 
   // parrallelism
@@ -225,7 +222,7 @@ int main(int argc, char **argv)
   sd = sandard_deviation(x, N);
 
   // Sampen algorithm initialisation
-  m = 2;
+  m = p.m;
   gpuErrchk(cudaMemcpyToSymbol(d_m, &m, sizeof(int), 0, cudaMemcpyHostToDevice));
   r = p.r * sd;
   gpuErrchk(cudaMemcpyToSymbol(d_r, &r, sizeof(float), 0, cudaMemcpyHostToDevice));
