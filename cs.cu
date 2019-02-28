@@ -103,6 +103,13 @@ int countlines(char *fname)
 }
 
 // parameters
+typedef struct {
+  float r;          // max distance
+  int m;            // embed dim
+  char infile;      //
+  char outfile;     //
+} params;
+
 static struct option options[] = {
     {"in", required_argument, NULL, 'i'},
     {"out", required_argument, NULL, 'o'},
@@ -122,7 +129,7 @@ void usage(char **argv)
     printf("\n");
 }
 
-void parse_arguments(int argc, char **argv)
+void parse_arguments(int argc, char **argv, params *p)
 {
   float ftmp;
   int itmp;
@@ -131,12 +138,13 @@ void parse_arguments(int argc, char **argv)
   while( (c = getopt_long(argc, argv, "m:r:i:o", options, NULL)) != EOF) {
     switch (c) {
       case 'm':
-        itmp = atoi(optarg);
-        gpuErrchk(cudaMemcpyToSymbol(d_m, &itmp, sizeof(int), 0, cudaMemcpyHostToDevice));
+        sscanf(optarg, "%d", &(p->m));
+        gpuErrchk(cudaMemcpyToSymbol(d_m, &(p->m), sizeof(int), 0, cudaMemcpyHostToDevice));
         break;
       case 'r':
+        sscanf(optarg, "%f", &(p->r));
         ftmp = atof(optarg);
-        gpuErrchk(cudaMemcpyToSymbol(d_r, &ftmp, sizeof(float), 0, cudaMemcpyHostToDevice));
+        gpuErrchk(cudaMemcpyToSymbol(d_r, &(p->r), sizeof(float), 0, cudaMemcpyHostToDevice));
         break;
       case 'i':
         optarg;
@@ -167,7 +175,13 @@ float sandard_deviation(float *x, int N)
 
 int main(int argc, char **argv)
 {
-  parse_arguments(argc, argv);
+  params p = {
+    0.2f,
+    2,
+    "data.dat",
+    "out.dat"
+  };
+  parse_arguments(argc, argv, &p);
   
   int i;
   float *x;
@@ -197,10 +211,10 @@ int main(int argc, char **argv)
   sd = sandard_deviation(x, N);
 
   // Sampen algorithm initialisation
-  m = 2;
-  gpuErrchk(cudaMemcpyToSymbol(d_m, &m, sizeof(int), 0, cudaMemcpyHostToDevice));
-  r = 0.2f * sd;
-  gpuErrchk(cudaMemcpyToSymbol(d_r, &r, sizeof(float), 0, cudaMemcpyHostToDevice));
+  //m = 2;
+  //gpuErrchk(cudaMemcpyToSymbol(d_m, &m, sizeof(int), 0, cudaMemcpyHostToDevice));
+  //r = 0.2f * sd;
+  //gpuErrchk(cudaMemcpyToSymbol(d_r, &r, sizeof(float), 0, cudaMemcpyHostToDevice));
 
   // space in shared mem for base vec (m + 1)
   gpuErrchk(cudaMallocManaged(&base_vec, (m + 1) * sizeof(float)));
