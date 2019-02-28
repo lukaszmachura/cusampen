@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include <getopt.h>
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
@@ -101,7 +102,41 @@ int countlines(char *fname)
     return linenumbers;
 }
 
+// parameters
+static struct option options[] = {
+    {"in", required_argument, NULL, 'i'},
+    {"out", required_argument, NULL, 'o'},
+    {"embed", required_argument, NULL, 'm'},
+    {"rad", required_argument, NULL, 'r'},
+};
 
+void usage(char **argv)
+{
+    printf("Usage: %s <params> \n\n", argv[0]);
+    printf("Model params:\n");
+    printf("   -m, --embed=INT        set the embedding dimension 'dim' to INT\n");
+    printf("   -r, --radius=FLOAT     set the maximal distance between vectors\n");
+    printf("                          to 'radius' to FLOAT\n");
+    printf("   -i, --in=FILE_NAME     set the input data to FILE_NAME\n");
+    printf("   -o, --out=FILE_NAME    set the output data to FILE_NAME\n")
+    printf("\n");
+}
+
+def std(float x)
+{
+  int i;
+  float sd = 0, mean = 0;
+  
+  for (i = 0; i < N; ++i){
+    mean += x[i];
+    sd += x[i] * x[i];
+  }
+  
+  mean /= N;
+  sd = sd / N - mean * mean;
+  
+  return sqrt(sd);
+}
 
 int main(void)
 {
@@ -109,7 +144,7 @@ int main(void)
   float *x;
   int *mvec, *mplus1vec;
   int *mmatches, *mplus1matches;
-  float *base_vec, r;
+  float *base_vec, r, sd;
   int m;
 
   // data
@@ -130,11 +165,12 @@ int main(void)
 
   // initialize data
   load_data(fname, x);
+  sd = std(x, N);
 
   // Sampen algorithm initialisation
   m = 2;
   gpuErrchk(cudaMemcpyToSymbol(d_m, &m, sizeof(int), 0, cudaMemcpyHostToDevice));
-  r = 0.2f;
+  r = 0.2f * sd;
   gpuErrchk(cudaMemcpyToSymbol(d_r, &r, sizeof(float), 0, cudaMemcpyHostToDevice));
 
   // space in shared mem for base vec (m + 1)
