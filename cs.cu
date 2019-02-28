@@ -122,7 +122,7 @@ void usage(char **argv)
     printf("\n");
 }
 
-float std(float x)
+float sandard_deviation(float x, int N)
 {
   int i;
   float sd = 0, mean = 0;
@@ -165,7 +165,7 @@ int main(void)
 
   // initialize data
   load_data(fname, x);
-  sd = std(x, N);
+  sd = sandard_deviation(x, N);
 
   // Sampen algorithm initialisation
   m = 2;
