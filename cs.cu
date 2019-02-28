@@ -193,10 +193,9 @@ int main(int argc, char **argv)
     "data.dat",
     "out.dat"
   };
-  parse_arguments(argc, argv, &p);
   
+  parse_arguments(argc, argv, &p);
   dump_params(&p);
-  return 1;
   
   int i;
   float *x;
