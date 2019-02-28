@@ -218,7 +218,7 @@ int main(int argc, char **argv)
   gpuErrchk(cudaMallocManaged(&mplus1vec, N * sizeof(int)));
 
   // initialize data
-  load_data(fname, x);
+  load_data(p.infile, x);
   sd = sandard_deviation(x, N);
 
   // Sampen algorithm initialisation
