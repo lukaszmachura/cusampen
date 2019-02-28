@@ -77,13 +77,13 @@ void findvec(float *base_vec, float *in, int *mvec, int *mplus1vec)
 
 int load_data(char *fname, float *x)
 {
-    FILE *f = fopen(fname, "r");
-    float buf;
-    int i = 0;
-    while(fscanf(f, "%f", &buf) > 0)
-	x[i++] = buf;
-    fclose(f);
-    return i - 1;
+  FILE *f = fopen(fname, "r");
+  float buf;
+  int i = 0;
+  while(fscanf(f, "%f", &buf) > 0)
+    x[i++] = buf;
+  fclose(f);
+  return i - 1;
 }
 
 int countlines(char *fname)
