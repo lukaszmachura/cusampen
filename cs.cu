@@ -126,7 +126,7 @@ void dump_params(params * p)
   fprintf(stdout,"#r:%f\n",p->r);
   fprintf(stdout,"#infile:%s\n",p->infile);
   fprintf(stdout,"#outfile:%s\n",p->outfile);
-  fflush(stdut);
+  fflush(stdout);
 }
 
 void usage(char **argv)
