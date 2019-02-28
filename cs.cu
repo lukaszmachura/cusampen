@@ -122,6 +122,33 @@ void usage(char **argv)
     printf("\n");
 }
 
+void parse_arguments(int argc, char **argv)
+{
+  float ftmp;
+  int itmp;
+  int c;
+
+  while( (c = getopt_long(argc, argv, "m:r:i:o", options, NULL)) != EOF) {
+    switch (c) {
+      case 'm':
+        itmp = atoi(optarg);
+        gpuErrchk(cudaMemcpyToSymbol(d_m, &itmp, sizeof(int), 0, cudaMemcpyHostToDevice));
+        break;
+      case 'r':
+        ftmp = atof(optarg);
+        gpuErrchk(cudaMemcpyToSymbol(d_r, &ftmp, sizeof(float), 0, cudaMemcpyHostToDevice));
+        break;
+      case 'i':
+        optarg;
+        break;
+      case 'd':
+        optarg;
+        break;
+    }
+  }
+}
+
+
 float sandard_deviation(float *x, int N)
 {
   int i;
@@ -138,8 +165,10 @@ float sandard_deviation(float *x, int N)
   return sqrt(sd);
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+  parse_arguments(argc, argv);
+  
   int i;
   float *x;
   int *mvec, *mplus1vec;
