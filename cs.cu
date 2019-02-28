@@ -154,7 +154,7 @@ void parse_arguments(int argc, char **argv, params *p)
         gpuErrchk(cudaMemcpyToSymbol(d_m, &(p->m), sizeof(int), 0, cudaMemcpyHostToDevice));
         break;
       case 'r':
-        sscanf(optarg, "%f", p.r);
+        sscanf(optarg, "%f", &(p->r));
         ftmp = atof(optarg);
         //gpuErrchk(cudaMemcpyToSymbol(d_r, &(p->r), sizeof(float), 0, cudaMemcpyHostToDevice));
         break;
