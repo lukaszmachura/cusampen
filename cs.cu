@@ -21,7 +21,7 @@ __device__ float d_r;
 
 // Kernel functions
 __global__ 
-void reduce(int *g_idata, int *g_out) {
+void reduce(int *g_idata, unsigned int *g_out) {
   __shared__ int sdata[BLOCKSIZE];
   // each thread loads one element from global to shared mem
   int i = blockIdx.x*blockDim.x + threadIdx.x;
@@ -157,7 +157,7 @@ void parse_arguments(int argc, char **argv, params *p)
       case 'i':
         strcpy(p->infile, optarg);
         break;
-      case 'd':
+      case 'o':
         strcpy(p->outfile, optarg);
         break;
     }
@@ -196,9 +196,10 @@ int main(int argc, char **argv)
   int i;
   float *x;
   int *mvec, *mplus1vec;
-  int *mmatches, *mplus1matches;
+  unsigned int *mmatches, *mplus1matches;
   float *base_vec, r, sd;
   int m;
+  FILE * outFile;
 
   // data
   int N = countlines(p.infile);
@@ -210,8 +211,8 @@ int main(int argc, char **argv)
 
   // Allocate Unified Memory – accessible from CPU or GPU
   gpuErrchk(cudaMallocManaged(&x, N * sizeof(float)));
-  gpuErrchk(cudaMallocManaged(&mmatches, sizeof(int)));
-  gpuErrchk(cudaMallocManaged(&mplus1matches, sizeof(int)));
+  gpuErrchk(cudaMallocManaged(&mmatches, sizeof(unsigned int)));
+  gpuErrchk(cudaMallocManaged(&mplus1matches, sizeof(unsigned int)));
   gpuErrchk(cudaMallocManaged(&mvec, N * sizeof(int)));
   gpuErrchk(cudaMallocManaged(&mplus1vec, N * sizeof(int)));
 
@@ -228,7 +229,7 @@ int main(int argc, char **argv)
   gpuErrchk(cudaMallocManaged(&base_vec, (m + 1) * sizeof(float)));
   
   // search for EACH possible base vec
-  int n_m = 0,
+  unsigned long n_m = 0,
       n_mplus1 = 0;
   for (int ibv = 0; ibv < N - m - 1; ibv++){
       // clean storage
@@ -257,10 +258,12 @@ int main(int argc, char **argv)
       n_mplus1 += mplus1matches[0] - 1;
   }//end of search
 
-  fprintf(stdout, "m vector matches: %d\n", n_m);
-  fprintf(stdout, "(m+1) vector matches: %d\n", n_mplus1);
-  fprintf(stdout, "ratio = n_{m+1}/n_m: %f\n", (float)n_mplus1/n_m);
-  fprintf(stdout, "SampEn = -ln(ratio): %f\n", -log((float)n_mplus1/n_m));
+  outFile = fopen(p.outfile, "w");
+    fprintf(outFile, "m vector matches: %lu\n", n_m);
+    fprintf(outFile, "(m+1) vector matches: %lu\n", n_mplus1);
+    fprintf(outFile, "ratio = n_{m+1}/n_m: %f\n", (float)n_mplus1/n_m);
+    fprintf(outFile, "SampEn = -ln(ratio): %f\n", -log((float)n_mplus1/n_m));
+  fclose(outFile);
 
   // Free memory
   gpuErrchk(cudaFree(x));
@@ -289,5 +292,3 @@ void czek(int n, int *idx, int *str, int *bI, int *bD, int *tI, int *gD)
       gD[i] = gridDim.x;
   }
 }
-
-
