@@ -292,5 +292,3 @@ void czek(int n, int *idx, int *str, int *bI, int *bD, int *tI, int *gD)
       gD[i] = gridDim.x;
   }
 }
-
-
