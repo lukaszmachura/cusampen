@@ -1,12 +1,15 @@
-CC=/usr/local/cuda-10.0/bin/nvcc
+CC=nvcc
 
-all: cs
+all: cs main
 
 cs: cs.cu
-	$(CC) --gpu-architecture=compute_35 cs.cu -o cs
+	$(CC) -arch=compute_50 -code=sm_50 -Xptxas -v cs.cu -o cs
+
+main: main.cpp
+	g++ -std=c++1y -march=native -fopenmp main.cpp -o main -lm -I. -I$(CUDA_PATH)/include -L$(CUDA_PATH)/lib64 -lnvrtc -lcuda
 
 clean:
-	rm -rf cs
+	rm -rf cs main
     
 mrproper:
 	rm -rf cs *.dat
