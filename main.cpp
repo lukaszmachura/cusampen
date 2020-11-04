@@ -11,13 +11,15 @@ int main(int argc, char **argv){
       printf("m (%d) > length of data (%d)\nExiting...", p.m, N);
       return -1;
   }
-  
   cuda::init();
   cuda::device gpu(0);
   cuda::primary_context ctx(gpu);
   ctx.set_current(); 
 
-  size_t size = N * sizeof(float);
+  cuda::dim3 threads(128);
+  cuda::dim3 blocks((N + 127) / 128);
+
+  size_t size = threads.x * blocks.x * sizeof(float);
   cuda::host_ptr<float> x(size);
   cuda::host_ptr<int> mcounts(size);
   cuda::host_ptr<int> mpocounts(size);
@@ -31,18 +33,14 @@ int main(int argc, char **argv){
   ctx.set_current();
 
   float eps = standard_deviation(x, N) * p.r;
-  printf("eps = %f\n", eps);
 
-  const std::string source = get_kernel_source(p.m, eps, N);
+  const std::string source = get_kernel_source(p.m, eps, N, p.apen);
   const std::string ptx = compile(source);
 
   cuda::module mod(ptx);
-  cuda::function kernel = mod.get_function("findvec");
+  cuda::function kernel = mod.get_function("sampen");
   int regs = kernel.get_attribute(CU_FUNC_ATTRIBUTE_NUM_REGS);
-  printf("regs %d\n", regs);
-
-  cuda::dim3 threads(128);
-  cuda::dim3 blocks((N + 127) / 128);
+  //printf("regs %d\n", regs);
 
   void *args[] = {&dx, &dmcounts, &dmpocounts};
 
@@ -54,8 +52,8 @@ int main(int argc, char **argv){
   dmpocounts.to_host(mpocounts, size);
   ctx.synchronize();
 
-  int mcount = reduce(mcounts, N - p.m + 1, p.apen);
-  int mpocount = reduce(mpocounts, N - p.m, p.apen);
+  int mcount = sum(mcounts, N - p.m + 1);
+  int mpocount = sum(mpocounts, N - p.m);
 
   FILE * outFile;
   outFile = fopen(p.outfile.c_str(), "w");
